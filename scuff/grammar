@@ -1,0 +1,31 @@
+Module : Assignment
+       | Assignment Delimiter Module
+
+Assignment : Identifier MaybeEQ Expr
+
+Identifier : Dotted Identifier
+           | IDENTIFIER
+
+Dotted : IDENTIFIER ATTRIBUTE
+
+MaybeEQ : EQUALS | None
+
+Expr : LITERAL
+     | List
+     | Dict
+     | Delimiter
+     | None
+
+List : L_BRACKET RepeatedExpr R_BRACKET
+
+RepeatedExpr : Expr Delimiter RepeatedExpr
+             | None
+
+Dict : L_CURLY_BRACE RepeatedKVP R_CURLY_BRACE
+
+RepeatedKVP : KVPair Delimiter RepeatedKVP
+            | None
+
+KVPair : Identifier MaybeEQ Expr
+
+Delimiter : NEWLINE | COMMA | None
