@@ -30,7 +30,7 @@ def parse(file: PathLike = None, *, string: FileContents = None) -> Module:
     if string is None:
         return FileParser(file).parse()
     if file is None:
-        return RecursiveDescentParser(string=string)).parse()
+        return RecursiveDescentParser(string=string).parse()
     raise ValueError(
         "A `file` argument is required when `string` is not given or None."
     )
