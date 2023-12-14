@@ -64,6 +64,9 @@ class Lexer:
             # Again here:
         (re.compile(r'^\d[\d_]*'), TokType.INTEGER),
 
+        ## None/null
+        (re.compile(r'^(none|null)', re.IGNORECASE), TokType.NONE),
+
         ## Booleans
         (re.compile(r'^(true|yes)', re.IGNORECASE), TokType.TRUE),
         (re.compile(r'^(false|no)', re.IGNORECASE), TokType.FALSE),
