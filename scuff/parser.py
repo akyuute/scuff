@@ -18,11 +18,12 @@ from ast import (
     NodeVisitor,
 )
 from os import PathLike
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from types import GeneratorType
-from typing import Any, Iterable, NoReturn
+from typing import Any, NoReturn
 
 from .error import ParseError
+from .compiler import Compiler
 from .lexer import Lexer
 from .token import(
     CharNo,
