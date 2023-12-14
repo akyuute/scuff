@@ -459,7 +459,6 @@ class RecursiveDescentParser:
         '''
         tree = self.parse()
         unparsed = Compiler().compile(tree)
-        # print(unparsed)
         return unparsed
 
 
@@ -563,15 +562,14 @@ class Unparser(NodeVisitor):
     def visit_Assign(self, node: Assign) -> str:
         target = (yield node.targets[-1])
         value = (yield node.value)
+        if value == str(None):
+            value = ""
         return f"{target} {value}"
 
     def visit_Constant(self, node: Constant) -> str:
         val = node.value
         if isinstance(val, str):
             return repr(val)
-        #TODO: Fix literal None not preserved in containers!
-        if val is None:
-            return ""
         return str(val)
 
     def visit_Dict(self, node: Dict) -> str:
@@ -581,7 +579,10 @@ class Unparser(NodeVisitor):
             keys.append((yield k))
         for v in node.values:
             self._indent_level += 1
-            values.append((yield v))
+            value = (yield v)
+            if value == str(None):
+                value = ""
+            values.append(value)
             self._indent_level -= 1
         assignments = tuple(' '.join(pair) for pair in zip(keys, values))
         self._indent_level += 1
@@ -603,15 +604,23 @@ class Unparser(NodeVisitor):
         one_line_limit = 3
         elems = []
         for e in node.elts:
+            self._indent_level += 1
             elems.append((yield e))
+            self._indent_level -= 1
+        self._indent_level += 1
         if len(elems) > one_line_limit:
             self._indent_level += 1
-            joined = ('\n' + self.indent()).join(elems)
-            string = f"[\n{self.indent()}{joined}\n]"
+            opening = f"[\n{self.indent()}"
+            joiner = '\n' + self.indent()
             self._indent_level -= 1
+            closing = f"\n{self.indent()}]"
         else:
-            joined = ', '.join(str(e) for e in elems)
-            string = f"[{joined}]"
+            opening = "["
+            joiner = ", "
+            closing = "]"
+        self._indent_level -= 1
+        joined = joiner.join(elems)
+        string = f"{opening}{joined}{closing}"
         return string
 
     def visit_Name(self, node: Name) -> str:
