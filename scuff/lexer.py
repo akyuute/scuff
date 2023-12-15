@@ -97,6 +97,19 @@ class Lexer:
         (re.compile(r'^[^' + NOT_IN_IDS + r']+'), TokType.IDENTIFIER),
     )
 
+    __slots__ = (
+        '_string',
+        '_lines',
+        '_tokens',
+        '_token_stack',
+        '_string_debug',
+        'eof',
+        '_cursor',
+        '_lineno',
+        '_colno',
+        '_file',
+    )
+
     def __init__(
         self,
         string: str = None,
@@ -105,13 +118,13 @@ class Lexer:
         self._string = string
         self._lines = self._string.split('\n')
         self._tokens = []
-        self._string_stack = None
         self._token_stack = []
+        self._string_debug = None
+        self.eof = EOF
 
         self._cursor = 0  # 0-indexed
         self._lineno = 1  # 1-indexed
         self._colno = 1  # 1-indexed
-        self.eof = TokType.EOF
         self._file = file
 
     @property
@@ -165,8 +178,8 @@ class Lexer:
             while True:
                 tok = self.get_token()
                 tokens.append(tok)
-                if tok.kind is self.eof:
-                    break
+                if tok.kind is TokType.EOF:
+                   break
         except TokenError as e:
             import traceback
             traceback.print_exc(limit=1)
@@ -325,18 +338,17 @@ class Lexer:
                         # Handle the next token separately.
                         self._token_stack.append(maybe_str)
 
-                # self._tokens.append(self._string_debug)
                 self._string_debug = None
 
             self._tokens.append(tok)
             return tok
 
         else:
-            if s is EOF:
+            if s is self.eof:
                 tok = Token(
                     value=s,
                     at=(self._cursor, (self._lineno, self._colno)),
-                    kind=self.eof,
+                    kind=TokType.EOF,
                     matchgroups=None,
                     lexer=self,
                     file=self._file

@@ -80,6 +80,14 @@ class RecursiveDescentParser:
     :param string: A string to parse if `lexer` is not given
     :type string: :class:`FileContents`
     '''
+    __slots__ = (
+        '_cursor',
+        '_expr_stack',
+        '_lexer',
+        '_string',
+        '_tokens',
+    )
+
     def __init__(
         self,
         lexer: Lexer = None,
