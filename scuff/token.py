@@ -154,13 +154,16 @@ class Token:
         return s
 
     def __lt__(self, other) -> bool:
-        pass
+        return self.cursor < other.cursor
+
     def __le__(self, other) -> bool:
-        pass
+        return self.cursor <= other.cursor
+
     def __gt__(self, other) -> bool:
-        pass
+        return self.cursor > other.cursor
+
     def __ge__(self, other) -> bool:
-        pass
+        return self.cursor >= other.cursor
 
     def __class_getitem__(cls, item: TokType) -> str:
         return cls
