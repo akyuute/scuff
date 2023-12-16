@@ -2,5 +2,130 @@
 Scuff
 ######
 
-*A config file format and transpiler suite written in Python.*
+*A human-readable data serialization language written in Python.*
+
+
+Introduction
+=============
+
+**Scuff** is a language for data serialization: a way to store and read data
+between formats.
+
+One likely use for **Scuff** is application configuration files.
+
+
+Grammar
+========
+
+Assigning Variables
+--------------------
+
+Variables are given values with a *key* and a *value*.
+Key names must be valid variable names, meaning they contain no spaces or
+symbols except underscore (``_``).
+Values can be assigned to variables with or without an equals sign (``=``)::
+
+    my_favorite_number = 42
+    my_favorite_color "Magenta"
+    is_but_a_flesh_wound= yes
+
+When left without a value, variables will evaluate to ``null``/``None``::
+
+    set_to_null =
+    also_null
+    but_this_has_a_value 15
+
+
+Data Types
+-----------
+
+- Numbers
+    Numbers can be positive integers or floats::
+
+        1 1.2 1_000 0.123 .123_4
+
+- Booleans
+    The boolean values ``True`` and ``False`` are given using these variants::
+
+        True true yes
+        False false no
+
+- Strings
+    Single-line strings can be enclosed by single quotes (``'``), double
+    quotes (``"``) or backticks (`````), and multiline strings are enclosed by
+    three of any of those::
+
+        foo "abc"
+        bar 'def'
+        baz '''Hi,
+                did you know
+                    you're cute?
+                        '''
+
+    Strings placed right next to each other are concatenated::
+        
+        first = "ABC"
+        second = "DEF"
+        first_plus_second = "ABC"  "DEF"
+        concatenated = "ABCDEF"
+                    
+- Lists
+    Lists are enclosed by square brackets (``[]``).
+    Elements inside lists are separated by spaces, commas or line breaks::
+
+        groceries [
+            bread,
+            milk eggs
+            bacon
+        ]
+
+- Objects
+    Objects, which are groups of key-value pairs, are enclosed by curly braces
+    (``{}``).
+    Values may be any expression, even other objects::
+
+        me {
+            name "Samantha"
+            age 24
+            job "Developer"
+            favorite_things {
+                editor "Vim"
+                languages ["Python", "Rust"]
+            }
+        }
+
+    Objects may also take the form of dotted attribute lookups::
+
+        outer.middle.inner no  # == {'outer': {'middle': {'inner': False}}}
+
+- Comments
+    Single-line comments are made using the ``#`` symbol::
+
+        option = "The parser reads this."
+        # But this is a comment.
+            #And so is this.
+        option2 = "# But not this; It's inside a string."
+        # The parser ignores everything between ``#`` and the end of the line.
+         #   ignore = "Comment out any lines of code you want to skip."
+
+
+Installation
+=============
+
+To install **Scuff** and its tools for Python from the Python Package Index,
+run the following in the command line::
+
+    $ python -m pip install scuff
+
+
+Usage
+======
+Once you install **Scuff**, you can then import **Scuff** as a Python module
+and use its tools::
+
+    >>> import scuff
+    >>> scuff.convert_file('file.conf')
+    ...
+
+
 
