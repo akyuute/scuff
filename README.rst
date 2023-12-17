@@ -14,6 +14,17 @@ between formats.
 One likely use for **Scuff** is application configuration files.
 
 
+Installation
+=============
+
+To install **Scuff** and its tools for Python from the Python Package Index,
+run the following in the command line:
+
+.. code:: shell
+
+    $ python -m pip install scuff
+
+
 Grammar
 ========
 
@@ -91,9 +102,9 @@ Data Types
             "bacon"
         ]
 
-- Objects
-    Objects are groups of key-value pairs enclosed by curly braces (``{}``).
-    Values may be any expression, even other objects:
+- Mappings
+    Mappings are groups of key-value pairs enclosed by curly braces (``{}``).
+    Values may be any expression, even other mappings:
 
     .. code:: py
 
@@ -107,11 +118,11 @@ Data Types
             }
         }
 
-    Objects may also take the form of dotted attribute lookups:
+    Mappings may also take the form of dotted attribute lookups:
 
     .. code:: py
 
-        outer.middle.inner no  # == {'outer': {'middle': {'inner': False}}}
+        outer.middle.inner yes  # == {'outer': {'middle': {'inner': True}}}
 
 - Comments
     Single-line comments are made using the ``#`` symbol:
@@ -126,20 +137,9 @@ Data Types
          #   ignore = "Comment out any lines of code you want to skip."
 
 
-Installation
-=============
-
-To install **Scuff** and its tools for Python from the Python Package Index,
-run the following in the command line:
-
-.. code:: shell
-
-    $ python -m pip install scuff
-
-
 Usage
 ======
-Once you install **Scuff**, you can then import **Scuff** as a Python module
+Once you install **Scuff**, you can then import ``scuff`` as a Python module
 and use its tools:
 
 .. code:: py
