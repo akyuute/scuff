@@ -1,6 +1,6 @@
 '''
 Scuff:
-    A config file format and transpiler suite written in Python.
+    A data serialization language and transpiler suite written in Python.
 '''
 
 
@@ -14,11 +14,12 @@ __copyright__ = "Copyright (c) 2023-present akyuute"
 
 
 from .tools import (
-    ast_to_data,
-    convert_file,
-    data_to_text,
+    ast_to_py,
+    file_to_py,
     parse,
-    text_to_data,
+    py_to_scuff,
+    scuff_to_py,
+    unparse,
 )
 from .parser import (
     FileParser,

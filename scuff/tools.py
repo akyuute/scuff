@@ -16,13 +16,13 @@ from .lexer import Lexer
 from .parser import RecursiveDescentParser, FileParser, PyParser
 
 
-type FileContents = str
 type PythonData = str
+type ScuffText = str
 
 
-def parse(file: PathLike = None, *, string: FileContents = None) -> Module:
+def parse(file: PathLike = None, *, string: ScuffText = None) -> Module:
     '''
-    Parse a config file and return its AST.
+    Parse Scuff text or a file containing it and return its AST.
 
     :param file: The file to parse
     :type file: :class:`PathLike`
@@ -36,7 +36,17 @@ def parse(file: PathLike = None, *, string: FileContents = None) -> Module:
     )
 
 
-def ast_to_data(node: AST) -> PythonData:
+def unparse(node: AST) -> ScuffText:
+    '''
+    Convert an AST back into Scuff text.
+
+    :param node: The AST to unparse
+    :type node: :class:`AST`
+    '''
+    return Unparser().unparse(node)
+
+
+def ast_to_py(node: AST) -> PythonData:
     '''
     Convert an AST to Python data.
 
@@ -46,9 +56,9 @@ def ast_to_data(node: AST) -> PythonData:
     return Compiler().compile(node)
 
 
-def data_to_text(data: PythonData) -> FileContents:
+def py_to_scuff(data: PythonData) -> ScuffText:
     '''
-    Convert Python data to config file text.
+    Convert Python data to Scuff.
 
     :param data: The data to convert
     :type data: :class:`PythonData`
@@ -56,22 +66,23 @@ def data_to_text(data: PythonData) -> FileContents:
     return PyParser.to_scuff(data)
 
 
-def text_to_data(string: FileContents) -> PythonData:
+def scuff_to_py(string: ScuffText) -> PythonData:
     '''
-    Convert config file text to Python data.
+    Convert Scuff to Python data.
 
     :param string: The text to parse
-    :type string: :class:`FileContents`
+    :type string: :class:`ScuffText`
     '''
     module = RecursiveDescentParser(string=string).parse()
     return Compiler().compile(module)
 
 
-def convert_file(file: PathLike) -> PythonData:
+def file_to_py(file: PathLike) -> PythonData:
     '''
-    Read a config file, parse its contents and return the encoded data.
+    Parse a Scuff file and convert it to Python data.
 
     :param file: The file to parse
+    :type file: :class:`PathLike`
     '''
     absolute = os.path.abspath(os.path.expanduser(file))
     module = FileParser(absolute).parse()

@@ -462,9 +462,9 @@ class RecursiveDescentParser:
         self._reset()
         return Module(assignments)
 
-    def to_dict(self) -> dict[str]:
+    def to_py(self) -> PythonData:
         '''
-        Parse a config file and return its data as a :class:`dict`.
+        Parse Scuff text and return its equivalent Python data.
         '''
         tree = self.parse()
         unparsed = Compiler().compile(tree)
@@ -505,7 +505,7 @@ class FileParser(RecursiveDescentParser):
 
 class Unparser(NodeVisitor):
     '''
-    Convert ASTs to string representations using config file syntax.
+    Convert ASTs to string representations using Scuff syntax.
     '''
     def __init__(self) -> None:
         self._indent = 4 * ' '
@@ -514,13 +514,13 @@ class Unparser(NodeVisitor):
     def indent(self) -> str:
         return self._indent_level * self._indent
 
-    def stringify(
+    def unparse(
         self,
         tree: Iterable[AST] | Module,
         sep: str = '\n\n'
     ) -> FileContents:
         '''
-        Convert an AST to the contents of a config file.
+        Convert an AST to Scuff text.
 
         :param tree: The ASTs to be converted to strings
         :type tree: :class:`Iterable`[:class:`AST`] | :class:`Module`
@@ -639,7 +639,7 @@ class Unparser(NodeVisitor):
 
 class PyParser:
     '''
-    Convert Python config data to ASTs.
+    Convert Python data to ASTs.
     Effectively do the job of `ast.unparse()`.
     '''
 
@@ -652,10 +652,10 @@ class PyParser:
     @classmethod
     def parse(cls, data: Mapping) -> Module:
         '''
-        Convert a root-level config dict to a Module AST.
+        Convert a Python mapping to a Module AST.
         Effectively do the job of `ast.unparse()`.
 
-        :param data: The dict to convert
+        :param data: The mapping to convert
         :type data: :class:`Mapping`
         '''
         assignments = []
@@ -674,14 +674,14 @@ class PyParser:
     @classmethod
     def to_scuff(cls, data: Mapping) -> FileContents:
         '''
-        Convert a Python mapping to an AST and return the contents of
-        the config file that could be parsed back into that AST.
+        Convert a Python mapping to an AST and return the Scuff text that
+        could be parsed back into that AST.
 
         :param data: The mapping to convert
         :type data: :class:`Mapping`
         '''
         tree = cls.parse(data)
-        text = Unparser().stringify(tree)
+        text = Unparser().unparse(tree)
         return text
 
     @classmethod
