@@ -21,7 +21,7 @@ Assigning Variables
 --------------------
 
 Variables are assigned with a *key* and a *value*.
-Key names must be valid identifiers, meaning they contain no spaces or
+Key names must be valid identifiers, meaning they must contain no spaces or
 symbols except underscore (``_``).
 Values can be assigned to variables with or without an equals sign (``=``):
 
@@ -68,6 +68,8 @@ Data Types
                     you're cute?
                         '''
 
+
+..
     Strings placed right next to each other are concatenated:
 
     .. code:: py
@@ -84,9 +86,9 @@ Data Types
     .. code:: py
 
         groceries [
-            bread,
-            milk eggs
-            bacon
+            "bread",
+            "milk" "eggs"
+            "bacon"
         ]
 
 - Objects
