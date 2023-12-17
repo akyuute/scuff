@@ -33,7 +33,7 @@ class Lexer:
         When unset or ``None``, use `string` by default.
     :type file: :class: `PathLike`
     '''
-    STRING_CONCAT = True  # Concatenate neighboring strings
+    STRING_CONCAT = False  # Concatenate neighboring strings
     SPEECH_CHARS = tuple('"\'`') + ('"""', "'''", "```")
     MULTILINE_QUOTES = SPEECH_CHARS[-3:]
 
