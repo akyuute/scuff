@@ -195,7 +195,7 @@ class Compiler(NodeVisitor):
             l.append((yield e))
         return l
 
-    def visit_Module(self, node: Module) -> dict[str]:
+    def visit_Module(self, node: Module) -> PythonData:
         config = {}
         for n in node.body:
             assignment = (yield n)
@@ -210,6 +210,7 @@ class Compiler(NodeVisitor):
                         assignment = {target_name: updated}
             config.update(assignment)
         return config
+        # return [{target: value} for target, value in config.items()]
 
     def visit_Name(self, node: Name) -> str:
         return node.id
