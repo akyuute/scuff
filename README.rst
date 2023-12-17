@@ -20,16 +20,20 @@ Grammar
 Assigning Variables
 --------------------
 
-Variables are given values with a *key* and a *value*.
-Key names must be valid variable names, meaning they contain no spaces or
+Variables are assigned with a *key* and a *value*.
+Key names must be valid identifiers, meaning they contain no spaces or
 symbols except underscore (``_``).
-Values can be assigned to variables with or without an equals sign (``=``)::
+Values can be assigned to variables with or without an equals sign (``=``):
+
+.. code:: py
 
     my_favorite_number = 42
     my_favorite_color "Magenta"
     is_but_a_flesh_wound= yes
 
-When left without a value, variables will evaluate to ``null``/``None``::
+When left without a value, variables will evaluate to ``null``/``None``:
+
+.. code:: py
 
     set_to_null =
     also_null
@@ -53,7 +57,9 @@ Data Types
 - Strings
     Single-line strings can be enclosed by single quotes (``'``), double
     quotes (``"``) or backticks (`````), and multiline strings are enclosed by
-    three of any of those::
+    three of any of those:
+
+    .. code:: py
 
         foo "abc"
         bar 'def'
@@ -62,7 +68,9 @@ Data Types
                     you're cute?
                         '''
 
-    Strings placed right next to each other are concatenated::
+    Strings placed right next to each other are concatenated:
+
+    .. code:: py
         
         first = "ABC"
         second = "DEF"
@@ -71,7 +79,9 @@ Data Types
                     
 - Lists
     Lists are enclosed by square brackets (``[]``).
-    Elements inside lists are separated by spaces, commas or line breaks::
+    Elements inside lists are separated by spaces, commas or line breaks:
+
+    .. code:: py
 
         groceries [
             bread,
@@ -80,9 +90,10 @@ Data Types
         ]
 
 - Objects
-    Objects, which are groups of key-value pairs, are enclosed by curly braces
-    (``{}``).
-    Values may be any expression, even other objects::
+    Objects are groups of key-value pairs enclosed by curly braces (``{}``).
+    Values may be any expression, even other objects:
+
+    .. code:: py
 
         me {
             name "Samantha"
@@ -94,12 +105,16 @@ Data Types
             }
         }
 
-    Objects may also take the form of dotted attribute lookups::
+    Objects may also take the form of dotted attribute lookups:
+
+    .. code:: py
 
         outer.middle.inner no  # == {'outer': {'middle': {'inner': False}}}
 
 - Comments
-    Single-line comments are made using the ``#`` symbol::
+    Single-line comments are made using the ``#`` symbol:
+
+    .. code:: py
 
         option = "The parser reads this."
         # But this is a comment.
@@ -113,7 +128,9 @@ Installation
 =============
 
 To install **Scuff** and its tools for Python from the Python Package Index,
-run the following in the command line::
+run the following in the command line:
+
+.. code:: shell
 
     $ python -m pip install scuff
 
@@ -121,7 +138,9 @@ run the following in the command line::
 Usage
 ======
 Once you install **Scuff**, you can then import **Scuff** as a Python module
-and use its tools::
+and use its tools:
+
+.. code:: py
 
     >>> import scuff
     >>> scuff.convert_file('file.conf')
