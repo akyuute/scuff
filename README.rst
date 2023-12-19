@@ -40,7 +40,7 @@ Values can be assigned to variables with or without an equals sign (``=``):
 
     my_favorite_number = 42
     my_favorite_color "Magenta"
-    is_but_a_flesh_wound= yes
+    is_but_a_flesh_wound yes
 
 When left without a value, variables will evaluate to ``null``/``None``:
 
@@ -99,7 +99,7 @@ Data Types
         groceries [
             "bread",
             "milk" "eggs"
-            "bacon"
+            "spam"
         ]
 
 - Mappings
