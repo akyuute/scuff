@@ -7,7 +7,7 @@ Scuff:
 __title__ = 'scuff'
 __description__ = "A config file format and transpiler suite written in Python."
 __url__ = "https://github.com/akyuute/scuff"
-__version__ = '0.2'
+__version__ = '0.2.1'
 __author__ = "akyuute"
 __license__ = 'MIT'
 __copyright__ = "Copyright (c) 2023-present akyuute"
