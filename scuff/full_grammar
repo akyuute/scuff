@@ -1,0 +1,123 @@
+file[Module]: assignments ENDMARKER
+
+assignments: assignment*
+
+assignment[Assign]:
+    | NEWLINE*
+    | target EQUAL? expression?
+
+target[Attribute | Name]:
+    | attribute_target
+    | NAME
+
+attribute_target: t_primary DOT NAME !DOT
+
+t_primary:
+    | t_primary DOT NAME &DOT
+
+expression[Expr]:
+    | conjunction
+    | inversion
+    | comparison
+    | NEWLINE*
+
+conjunction[BinOp]:
+    | inversion (AMPER inversion)+
+    | inversion
+
+inversion[UnaryOp]:
+    | EXCLAMATION inversion
+    | comparison
+
+comparison[BinOp]:
+    | bitwise_or compare_op_bitwise_or_pair+
+    | bitwise_or
+
+compare_op_bitwise_or_pair[CmpopExprPair]:
+    | eq_bitwise_or
+    | noteq_bitwise_or
+    | lte_bitwise_or
+    | lt_bitwise_or
+    | gte_bitwise_or
+    | gt_bitwise_or
+
+eq_bitwise_or[CmpopExprPair]: EQEQUAL bitwise_or
+noteq_bitwise_or[CmpopExprPair]: NOTEQUAL bitwise_or
+lt_bitwise_or[CmpopExprPair]: LESS bitwise_or
+gt_bitwise_or[CmpopExprPair]: GREATER bitwise_or
+lte_bitwise_or[CmpopExprPair]: LESSEQUAL bitwise_or
+gte_bitwise_or[CmpopExprPair]: GREATEREQUAL bitwise_or
+
+bitwise_or[BinOp]:
+    | bitwise_or VBAR bitwise_xor
+    | bitwise_xor
+
+bitwise_xor[BinOp]:
+    | bitwise_xor CIRCUMFLEX bitwise_and
+    | bitwise_and
+
+bitwise_and[BinOp]:
+    | bitwise_or AMPER bitwise_xor
+    | shift_expr
+
+shift_expr[BinOp]:
+    | shift_expr LEFTSHIFT sum
+    | shift_expr RIGHTSHIFT sum
+    | sum
+
+sum[BinOp]:
+    | sum PLUS term
+    | sum MINUS term
+    | term
+
+term[BinOp]:
+    | term STAR factor
+    | term SLASH factor
+    | term DOUBLESLASH factor
+    | term PERCENT factor
+    | factor
+
+factor[UnaryOp]:
+    | PLUS factor
+    | MINUS factor
+    | TILDE factor
+    | power
+
+power[BinOp]:
+    | primary DOUBLESTAR factor
+    | primary
+
+primary[Expr]:
+    | atom
+    | group
+    | list
+    | dict
+
+atom[Constant]:
+    | STRING
+    | STRING+  -- If string concatenation is allowed
+    | NUMBER
+    | TRUE
+    | FALSE
+    | NONE
+
+group[Expr]: LPAR expression RPAR
+
+list[List]: LSQB NEWLINE* (expression separator?)* RSQB
+
+dict[Dict]: LBRACE NEWLINE* double_starred_kvpairs RBRACE
+
+double_starred_kvpairs: (double_starred_kvpair separator?)+
+
+double_starred_kvpair:
+    -- | DOUBLESTAR bitwise_or
+    | kvpair
+
+kvpair: dict_key (EQUAL | COLON)? expression
+
+dict_key:
+    | atom
+--  | bitwise_or
+
+separator: NEWLINE* | COMMA
+
