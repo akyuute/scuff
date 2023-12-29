@@ -13,6 +13,11 @@ __license__ = 'MIT'
 __copyright__ = "Copyright (c) 2023-present akyuute"
 
 
+ENDMARKER = ''
+NEWLINE = '\n'
+KEYWORDS = ()
+
+
 from .tools import (
     ast_to_py,
     file_to_py,
