@@ -101,7 +101,7 @@ atom[Constant]:
     | FALSE
     | NONE
 
-group[Expr]: LPAR expression RPAR
+group[Expr]: LPAR NEWLINE* expression NEWLINE* RPAR
 
 list[List]: LSQB NEWLINE* (expression separator?)* RSQB
 
