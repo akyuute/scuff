@@ -4,11 +4,9 @@ from enum import Enum
 from os import PathLike
 from typing import Any, Self
 
+from . import ENDMARKER, KEYWORDS, NEWLINE
 from .error import TokenError
 from .token import (
-    EOF,
-    KEYWORDS,
-    NEWLINE,
     Token,
     TokGroup,
     CharNo,
@@ -80,21 +78,22 @@ class Lexer:
         (re.compile(r'^[^' + NEWLINE + r'\S]+'), TokType.SPACE),
 
         # Operators
-        (re.compile(r'^='), TokType.EQUALS),
-        (re.compile(r'^\.'), TokType.ATTRIBUTE),
+        (re.compile(r'^='), TokType.EQUAL),
+        (re.compile(r'^\.'), TokType.DOT),
+        (re.compile(r'^-'), TokType.MINUS),
 
         # Syntax
         (re.compile(r'^\,'), TokType.COMMA),
-        (re.compile(r'^\('), TokType.L_PAREN),
-        (re.compile(r'^\)'), TokType.R_PAREN),
-        (re.compile(r'^\['), TokType.L_BRACKET),
-        (re.compile(r'^\]'), TokType.R_BRACKET),
-        (re.compile(r'^\{'), TokType.L_CURLY_BRACE),
-        (re.compile(r'^\}'), TokType.R_CURLY_BRACE),
+        (re.compile(r'^\('), TokType.LPAR),
+        (re.compile(r'^\)'), TokType.RPAR),
+        (re.compile(r'^\['), TokType.LSQB),
+        (re.compile(r'^\]'), TokType.RSQB),
+        (re.compile(r'^\{'), TokType.LBRACE),
+        (re.compile(r'^\}'), TokType.RBRACE),
 
         # Symbols
         *((r'^' + kw, TokType.KEYWORD) for kw in KEYWORDS),
-        (re.compile(r'^[^' + NOT_IN_IDS + r']+'), TokType.IDENTIFIER),
+        (re.compile(r'^[^' + NOT_IN_IDS + r']+'), TokType.NAME),
     )
 
     __slots__ = (
@@ -120,7 +119,7 @@ class Lexer:
         self._tokens = []
         self._token_stack = []
         self._string_debug = None
-        self.eof = EOF
+        self.eof = ENDMARKER
 
         self._cursor = 0  # 0-indexed
         self._lineno = 1  # 1-indexed
@@ -178,7 +177,7 @@ class Lexer:
             while True:
                 tok = self.get_token()
                 tokens.append(tok)
-                if tok.kind is TokType.EOF:
+                if tok.type is TokType.ENDMARKER:
                    break
         except TokenError as e:
             import traceback
@@ -209,7 +208,7 @@ class Lexer:
         :type last: :class:`Token`
         '''
         tokens = self._tokens
-        if last not in tokens and last.kind not in TokGroup.T_Invisible:
+        if last not in tokens and last.type not in TokGroup.T_Invisible:
             tokens.append(last)
         start = first.cursor
         end = last.cursor
@@ -278,7 +277,7 @@ class Lexer:
         s = self._string[self._cursor:]
 
         # Match against each rule:
-        for test, kind in self._rules:
+        for test, type_ in self._rules:
             m = re.match(test, s)
 
             if m is None:
@@ -288,13 +287,13 @@ class Lexer:
             tok = Token(
                 value=m.group(),
                 at=(self._cursor, (self._lineno, self._colno)),
-                kind=kind,
+                type=type_,
                 matchgroups=m.groups(),
                 lexer=self,
                 file=self._file
             )
 
-            if kind in TokGroup.T_Ignore:
+            if type_ in TokGroup.T_Ignore:
                 l = len(tok.value)
                 self._cursor += l
                 self._colno += l
@@ -303,11 +302,11 @@ class Lexer:
             # Update location:
             self._cursor += len(tok.value)
             self._colno += len(tok.value)
-            if kind is TokType.NEWLINE:
+            if type_ is TokType.NEWLINE:
                 self._lineno += len(tok.value)
                 self._colno = 1
 
-            if kind is TokType.STRING:
+            if type_ is TokType.STRING:
                 # Add to the string stack for error handling:
                 self._string_debug = tok
                 # Process strings by removing quotes:
@@ -324,11 +323,11 @@ class Lexer:
                 if self.STRING_CONCAT:
                     while True:
                         maybe_str = (yield from self._get_token())
-                        if maybe_str.kind in TokGroup.T_Ignore:
+                        if maybe_str.type in TokGroup.T_Ignore:
                             continue
                         break
 
-                    if maybe_str.kind is TokType.STRING:
+                    if maybe_str.type is TokType.STRING:
                         # Concatenate.
                         tok.value += maybe_str.value
                         self._tokens.append(tok)
@@ -348,7 +347,7 @@ class Lexer:
                 tok = Token(
                     value=s,
                     at=(self._cursor, (self._lineno, self._colno)),
-                    kind=TokType.EOF,
+                    type=TokType.ENDMARKER,
                     matchgroups=None,
                     lexer=self,
                     file=self._file
@@ -362,7 +361,7 @@ class Lexer:
             bad_token = Token(
                 value=bad_value,
                 at=(self._cursor, (self._lineno, self._colno)),
-                kind=TokType.UNKNOWN,
+                type=TokType.UNKNOWN,
                 matchgroups=None,
                 lexer=self,
                 file=self._file

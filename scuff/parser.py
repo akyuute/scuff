@@ -41,21 +41,21 @@ type PythonData = str
 
 # FIRST() functions
 type FIRST = set
-MatchesDotted: FIRST = {TokType.IDENTIFIER}
-MatchesMaybeEQ: FIRST = {TokType.EQUALS, None}
+MatchesDotted: FIRST = {TokType.NAME}
+MatchesMaybeEQ: FIRST = {TokType.EQUAL, None}
 MatchesExpr: FIRST = {
     *TG.T_Literal,
-    TokType.L_BRACKET,
-    TokType.L_CURLY_BRACE,
+    TokType.LSQB,
+    TokType.LBRACE,
     TokType.NEWLINE,
     TokType.COMMA,
     None
 }
-MatchesList: FIRST = {TokType.L_BRACKET}
+MatchesList: FIRST = {TokType.LSQB}
 MatchesRepeatedExpr: FIRST = {*MatchesExpr, None}
-MatchesDict: FIRST = {TokType.L_CURLY_BRACE}
-MatchesRepeatedKVP: FIRST = {TokType.IDENTIFIER, None}
-MatchesKVPair: FIRST = {TokType.IDENTIFIER}
+MatchesDict: FIRST = {TokType.LBRACE}
+MatchesRepeatedKVP: FIRST = {TokType.NAME, None}
+MatchesKVPair: FIRST = {TokType.NAME}
 MatchesDelimiter: FIRST = {TokType.NEWLINE, TokType.COMMA, None}
 
 # Return types
@@ -107,7 +107,7 @@ class RecursiveDescentParser:
         self._cursor = 0
         self._expr_stack = []
 
-    End = TokType.EOF
+    End = TokType.ENDMARKER
 
     @property
     def lookahead(self) -> Token:
@@ -156,7 +156,7 @@ class RecursiveDescentParser:
         '''
         tok = self._tokens[self._cursor]
         while True:
-            if tok.kind not in (*TG.T_Ignore, TokType.NEWLINE):
+            if tok.type not in (*TG.T_Ignore, TokType.NEWLINE):
                 return tok
             tok = self._advance()
 
@@ -166,23 +166,23 @@ class RecursiveDescentParser:
         :rtype: :class:`Token`
         '''
         while True:
-            if not (tok := self._advance()).kind in TG.T_Ignore:
+            if not (tok := self._advance()).type in TG.T_Ignore:
                 return tok
 
     def _match(
         self,
-        kind: TokType | Iterable[TokType],
+        type_: TokType | Iterable[TokType],
         errmsg: str = None,
         greedy: bool = False
     ) -> Token | NoReturn | bool:
         '''
-        Test if the current token matches a certain kind given by `kind`.
+        Test if the current token matches a certain type given by `type_`.
         If the test fails, raise :exc:`ParseError` using
         `errmsg` or return ``False`` if `errmsg` is ``None``.
         If the test passes, return the current token.
 
-        :param kind: The kind(s) to expect from the current token
-        :type kind: :class:`TokType`
+        :param type_: The type(s) to expect from the current token
+        :type type_: :class:`TokType`
 
         :param errmsg: The error message to display, optional
         :type errmsg: :class:`str`
@@ -194,14 +194,14 @@ class RecursiveDescentParser:
         :raises: :exc:`ParseError` When the test fails, `errmsg` is
             given and `greedy` is ``False`` 
         '''
-        if not isinstance(kind, Iterable):
-            kind = (kind,)
+        if not isinstance(type_, Iterable):
+            type_ = (type_,)
         tok = self.lookahead
         if greedy:
-            while tok.kind in kind:
+            while tok.type in type_:
                 tok = self._advance()
             return tok
-        if tok.kind not in kind:
+        if tok.type not in type_:
             if errmsg is None:
                 return False
             raise ParseError.hl_error(tok, errmsg, self)
@@ -263,7 +263,7 @@ class RecursiveDescentParser:
     def _parse_Assignment(self) -> Assign | None:
         self._skip_all_whitespace()
         if self.at_eof():
-            return TokType.EOF
+            return TokType.ENDMARKER
         target = (yield self._parse_Identifier)
         self._parse_MaybeEQ()
         value = (yield self._parse_Expr)
@@ -276,13 +276,13 @@ class RecursiveDescentParser:
 
     def _parse_Identifier(self) -> Name | Attribute:
         base = self.lookahead
-        kind = base.kind
+        type_ = base.type
         node = Name(base.value)
         node._token = base
 
         note = ""
-        if kind is not TokType.IDENTIFIER:
-            if kind in TG.T_Syntax:
+        if type_ is not TokType.NAME:
+            if type_ in TG.T_Syntax:
                 if self._expr_stack:
                     curr_expr = self._expr_stack[-1]
                     suggestion = {
@@ -291,15 +291,15 @@ class RecursiveDescentParser:
                     }[curr_expr]
                     note = f"Did you mean to use {suggestion!r}? "
                 else:
-                    note = f"Unmatched {kind.value!r} "
+                    note = f"Unmatched {type_.value!r} "
 
         msg = f"Invalid syntax: {note}(Expected an identifier):"
-        self._match(TokType.IDENTIFIER, msg)
+        self._match(TokType.NAME, msg)
 
         # This may be the base of another attr, or it may be the
         # terminal attr:
-        while self._match(TokType.ATTRIBUTE):
-            maybe_base_tok = self._match(TokType.IDENTIFIER, msg)
+        while self._match(TokType.DOT):
+            maybe_base_tok = self._match(TokType.NAME, msg)
             attr = maybe_base_tok.value
             node = Attribute(node, attr)
             node._token = maybe_base_tok
@@ -318,7 +318,7 @@ class RecursiveDescentParser:
         tok = self._match(TG.T_Literal)
         if tok:
             try:
-                match tok.kind:
+                match tok.type:
                     case TokType.STRING:
                         value = tok.value
                     case TokType.INTEGER:
@@ -337,18 +337,18 @@ class RecursiveDescentParser:
                 node = Constant(value)
             except ValueError:
                 # Floats with underscores sometimes fail.
-                msg = f"Invalid {kind.value.lower()} value: {tok.value!r}"
+                msg = f"Invalid {type_.value.lower()} value: {tok.value!r}"
                 raise ParseError.hl_error(tok, msg, self)
 
         else:
             # This is a complex expression.
             tok = self.lookahead
-            kind = tok.kind
-            if kind is TokType.IDENTIFIER:
+            type_ = tok.type
+            if type_ is TokType.NAME:
                 node = (yield self._parse_Identifier)
-            elif kind is TokType.L_BRACKET:
+            elif type_ is TokType.LSQB:
                 node = (yield self._parse_List)
-            elif kind is TokType.L_CURLY_BRACE:
+            elif type_ is TokType.LBRACE:
                 node = (yield self._parse_Dict)
             else:
                 msg = (f"Expected an expression,"
@@ -362,9 +362,9 @@ class RecursiveDescentParser:
     def _parse_List(self) -> List:
         self._expr_stack.append(List)
         msg = "_parse_List() called at the wrong time"
-        start = self._match(TokType.L_BRACKET, msg)
+        start = self._match(TokType.LSQB, msg)
         elems = (yield self._parse_RepeatedExpr)
-        self._match(TokType.R_BRACKET)
+        self._match(TokType.RSQB)
         node = List(elems)
         node._token = start
         self._expr_stack.pop()
@@ -375,10 +375,10 @@ class RecursiveDescentParser:
         exprs = []
         while True:
             self._skip_all_whitespace()
-            if self.lookahead.kind is TokType.EOF:
+            if self.lookahead.type is TokType.ENDMARKER:
                 msg = "Invalid syntax: Unmatched '[':"
                 raise ParseError.hl_error(start, msg, self)
-            if self.lookahead.kind is TokType.R_BRACKET:
+            if self.lookahead.type is TokType.RSQB:
                 break
             expr = (yield self._parse_Expr)
             # Match commas and newlines:
@@ -389,9 +389,9 @@ class RecursiveDescentParser:
     def _parse_Dict(self) -> Dict:
         self._expr_stack.append(Dict)
         msg = "_parse_Dict() called at the wrong time",
-        start = self._match(TokType.L_CURLY_BRACE, msg)
+        start = self._match(TokType.LBRACE, msg)
         keys, vals = (yield self._parse_RepeatedKVP)
-        self._match(TokType.R_CURLY_BRACE)
+        self._match(TokType.RBRACE)
         node = Dict(keys, vals)
         node._token = start
         self._expr_stack.pop()
@@ -403,10 +403,10 @@ class RecursiveDescentParser:
         vals = []
         while True:
             self._skip_all_whitespace()
-            if self.lookahead.kind is TokType.EOF:
+            if self.lookahead.type is TokType.ENDMARKER:
                 msg = "Invalid syntax: Unmatched '{':"
                 raise ParseError.hl_error(start, msg, self)
-            if self.lookahead.kind is TokType.R_CURLY_BRACE:
+            if self.lookahead.type is TokType.RBRACE:
                 break
             pair = (yield self._parse_KVPair)
             self._parse_Delimiter()
@@ -429,7 +429,7 @@ class RecursiveDescentParser:
         value = (yield self._parse_Expr)
         # Disallow assigning identifiers:
         if isinstance(value, (Name, Attribute)):
-            typ = value._token.kind.value.lower()
+            typ = value._token.type.value.lower()
             val = repr(value._token.value)
             note = f"expected expression, got {typ} {val}"
             msg = f"Invalid assignment: {note}:"
@@ -453,7 +453,7 @@ class RecursiveDescentParser:
         assignments = []
         while True:
             assign = self._parse(self._parse_Assignment)
-            if assign is TokType.EOF:
+            if assign is TokType.ENDMARKER:
                 break
             if assign is None:
                 # This happens when there are no assignments at all.

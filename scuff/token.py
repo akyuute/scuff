@@ -3,6 +3,8 @@ from enum import Enum
 from os import PathLike
 from typing import Any
 
+from . import ENDMARKER, NEWLINE
+
 
 type Lexer = 'Lexer'
 type LineNo = int
@@ -12,20 +14,17 @@ type TokenValue = str
 type Location = tuple[LineNo, ColNo]
 
 
-EOF = ''
+ENDMARKER = ''
 NEWLINE = '\n'
 KEYWORDS = ()
 
 
 class TokType(Enum):
     NEWLINE = repr(NEWLINE)
-    EOF = repr(EOF)
-
-    # Ignored tokens:
+    ENDMARKER = repr(ENDMARKER)
     COMMENT = 'COMMENT'
     SPACE = 'SPACE'
-
-    # Literals:
+    NAME = 'NAME'
     FLOAT = 'FLOAT'
     INTEGER = 'INTEGER'
     STRING = 'STRING'
@@ -33,25 +32,38 @@ class TokType(Enum):
     FALSE = 'FALSE'
     NONE = 'NONE'
 
-    # Symbols:
-    IDENTIFIER = 'IDENTIFIER'
-    KEYWORD = 'KEYWORD'
-
-    # Binary operators:
-    EQUALS = '='
-    ATTRIBUTE = '.'
-    ADD = '+'
-    SUBTRACT = '-'
-
-    # Syntax:
+    LPAR = '('
+    RPAR = ')'
+    LSQB = '['
+    RSQB = ']'
+    COLON = ':'
     COMMA = ','
-    L_PAREN = '('
-    R_PAREN = ')'
-    L_BRACKET = '['
-    R_BRACKET = ']'
-    L_CURLY_BRACE = '{'
-    R_CURLY_BRACE = '}'
-
+    SEMI = ';'
+    PLUS = '+'
+    MINUS = '-'
+    STAR = '*'
+    SLASH = '/'
+    DOUBLESLASH = '//'
+    VBAR = '|'
+    AMPER = '&'
+    LESS = '<'
+    GREATER = '>'
+    EQUAL = '='
+    DOT = '.'
+    PERCENT = '%'
+    LBRACE = '{'
+    RBRACE = '}'
+    EQEQUAL = '=='
+    NOTEQUAL = '!='
+    LESSEQUAL = '<='
+    GREATEREQUAL = '>='
+    TILDE = '~'
+    CIRCUMFLEX = '^'
+    LEFTSHIFT = '<<'
+    RIGHTSHIFT = '>>'
+    DOUBLESTAR = '**'
+    EXCLAMATION = '!'
+    QUESTION = '?'
     UNKNOWN = 'UNKNOWN'
 
     def __or__(self, other: Any) -> str:
@@ -69,16 +81,16 @@ class TokGroup:
         TokType.FALSE,
         TokType.NONE,
     }
-    T_AssignEvalNone = {TokType.NEWLINE, TokType.EOF}
+    T_AssignEvalNone = {TokType.NEWLINE, TokType.ENDMARKER}
     T_Ignore = {TokType.SPACE, TokType.COMMENT}
     T_Invisible = {*T_Ignore, TokType.NEWLINE}
     T_Syntax = {
-        TokType.L_BRACKET,
-        TokType.L_CURLY_BRACE,
-        TokType.L_PAREN,
-        TokType.R_BRACKET,
-        TokType.R_CURLY_BRACE,
-        TokType.R_PAREN,
+        TokType.LSQB,
+        TokType.LBRACE,
+        TokType.LPAR,
+        TokType.RSQB,
+        TokType.RBRACE,
+        TokType.RPAR,
     }
 
 
@@ -92,8 +104,8 @@ class Token:
     :param value: The literal text making up the token
     :type value: :class:`str`
 
-    :param kind: The token's distict kind
-    :type kind: :class:`TokType`
+    :param type: The token's distict type
+    :type type: :class:`TokType`
 
     :param matchgroups: The value gotten by re.Match.groups() when
         making this token
@@ -108,7 +120,7 @@ class Token:
     __slots__ = (
         'at',
         'value',
-        'kind',
+        'type',
         'matchgroups',
         'cursor',
         'lineno',
@@ -121,14 +133,14 @@ class Token:
         self,
         at: tuple[CharNo, Location],
         value: TokenValue,
-        kind: TokType,
+        type: TokType,
         matchgroups: tuple[str],
         lexer: Lexer = None,
         file: PathLike = None,
     ) -> None:
         self.at = at
         self.value = value
-        self.kind = kind
+        self.type = type
         self.matchgroups = matchgroups
         self.cursor = at[0]
         self.lineno = at[1][0]

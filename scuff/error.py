@@ -102,7 +102,7 @@ class TokenError(ConfigError):
         for t in between:
             token_length = len(t.value)
             kind = t.kind
-            if kind in (*TokGroup.T_Ignore, TokType.NEWLINE, TokType.EOF):
+            if kind in (*TokGroup.T_Ignore, TokType.NEWLINE, TokType.ENDMARKER):
                 if t is between[-1]:
                     token_length = 0
             match kind:
