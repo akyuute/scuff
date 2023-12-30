@@ -317,8 +317,9 @@ class RecursiveDescentParser:
 
         tok = self._match(TG.T_Literal)
         if tok:
+            type_ = tok.type
             try:
-                match tok.type:
+                match type_:
                     case TokType.STRING:
                         value = tok.value
                     case TokType.INTEGER:
