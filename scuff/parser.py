@@ -16,6 +16,7 @@ from ast import (
     Module,
     Name,
     NodeVisitor,
+    UnaryOp,
 )
 from os import PathLike
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -57,6 +58,12 @@ MatchesDict: FIRST = {TokType.LBRACE}
 MatchesRepeatedKVP: FIRST = {TokType.NAME, None}
 MatchesKVPair: FIRST = {TokType.NAME}
 MatchesDelimiter: FIRST = {TokType.NEWLINE, TokType.COMMA, None}
+MatchesUnaryOp: FIRST = {
+    TokType.MINUS,
+    TokType.PLUS,
+    TokType.EXCLAMATION,
+    TokType.TILDE
+}
 
 # Return types
 type Expr = Constant | List | Dict | Name
@@ -266,7 +273,7 @@ class RecursiveDescentParser:
             return TokType.ENDMARKER
         target = (yield self._parse_Identifier)
         self._parse_MaybeEQ()
-        value = (yield self._parse_Expr)
+        value = (yield self._parse_factor)
         if value is TokType.NEWLINE:
             value = Constant(None)
         self._parse_Delimiter()
@@ -311,10 +318,43 @@ class RecursiveDescentParser:
     def _parse_Delimiter(self) -> Delimiter:
         self._match(MatchesDelimiter, greedy=True)
 
-    def _parse_Expr(self) -> Expr:
-        if self._match(TG.T_AssignEvalNone):
-            return Constant(None)
+    def _parse_factor(self):
+        tok = self._match(MatchesUnaryOp)
+        if tok:
+            type_ = tok.type
+            return UnaryOp(
+                type_.value,
+                (yield self._parse_factor)
+            )
+            self._expr_stack.pop()
 
+        return (yield self._parse_primary)
+
+    def _parse_primary(self):
+        tok = self.lookahead
+        type_ = tok.type
+        if type_ in TG.T_Literal:
+            return self._parse_Constant()
+##        # Doesn't work; try something else...
+##        if self._expr_stack:
+##            if self._expr_stack[-1] is UnaryOp:
+##                msg = f"Invalid syntax: Expected a primitive type:"
+##                raise ParseError.hl_error(tok, msg, self)
+        elif type_ is TokType.NAME:
+            node = (yield self._parse_Identifier)
+        elif type_ is TokType.LSQB:
+            node = (yield self._parse_List)
+        elif type_ is TokType.LBRACE:
+            node = (yield self._parse_Dict)
+        else:
+            msg = (f"Expected an expression,"
+                   f" but got {tok.value!r} instead:")
+            raise ParseError.hl_error(tok, msg, self)
+        node._token = tok
+        self._skip_all_whitespace()
+        return node
+
+    def _parse_Constant(self) -> None:
         tok = self._match(TG.T_Literal)
         if tok:
             type_ = tok.type
@@ -340,25 +380,7 @@ class RecursiveDescentParser:
                 # Floats with underscores sometimes fail.
                 msg = f"Invalid {type_.value.lower()} value: {tok.value!r}"
                 raise ParseError.hl_error(tok, msg, self)
-
-        else:
-            # This is a complex expression.
-            tok = self.lookahead
-            type_ = tok.type
-            if type_ is TokType.NAME:
-                node = (yield self._parse_Identifier)
-            elif type_ is TokType.LSQB:
-                node = (yield self._parse_List)
-            elif type_ is TokType.LBRACE:
-                node = (yield self._parse_Dict)
-            else:
-                msg = (f"Expected an expression,"
-                       f" but got {tok.value!r} instead:")
-                raise ParseError.hl_error(tok, msg, self)
-
-        node._token = tok
-        self._skip_all_whitespace()
-        return node
+            return node
 
     def _parse_List(self) -> List:
         self._expr_stack.append(List)
@@ -381,7 +403,7 @@ class RecursiveDescentParser:
                 raise ParseError.hl_error(start, msg, self)
             if self.lookahead.type is TokType.RSQB:
                 break
-            expr = (yield self._parse_Expr)
+            expr = (yield self._parse_factor)
             # Match commas and newlines:
             self._parse_Delimiter()
             exprs.append(expr)
@@ -427,7 +449,7 @@ class RecursiveDescentParser:
     def _parse_KVPair(self) -> KVPair:
         target = (yield self._parse_Identifier)
         self._parse_MaybeEQ()
-        value = (yield self._parse_Expr)
+        value = (yield self._parse_factor)
         # Disallow assigning identifiers:
         if isinstance(value, (Name, Attribute)):
             typ = value._token.type.value.lower()
