@@ -73,7 +73,7 @@ class TokenError(ConfigError):
         if len(tokens) == 1:
             line_bridge = " "
             line = lexer.get_line(first_tok)
-            if first_tok.kind is TokType.STRING:
+            if first_tok.type is TokType.STRING:
                 text = first_tok.match_repr
             else:
                 text = first_tok.value
@@ -85,11 +85,11 @@ class TokenError(ConfigError):
             between = lexer.in_range(tokens[0], tokens[-1])
             if not between:
                 between = tokens
-            if any(t.kind is TokType.NEWLINE for t in between):
+            if any(t.type is TokType.NEWLINE for t in between):
                 # Consolidate multiple lines:
                 with_dups = (
                     lexer.get_line(t) for t in between
-                    if t.kind not in TokGroup.T_Ignore
+                    if t.type not in TokGroup.T_Ignore
                 )
                 lines = dict.fromkeys(with_dups)
                 # Don't count line breaks twice:
@@ -101,11 +101,11 @@ class TokenError(ConfigError):
         # Work out the highlight line:
         for t in between:
             token_length = len(t.value)
-            kind = t.kind
-            if kind in (*TokGroup.T_Ignore, TokType.NEWLINE, TokType.ENDMARKER):
+            type_ = t.type
+            if type_ in (*TokGroup.T_Ignore, TokType.NEWLINE, TokType.ENDMARKER):
                 if t is between[-1]:
                     token_length = 0
-            match kind:
+            match type_:
                 case TokType.STRING:
                     # match_repr contains the quotation marks:
                     token_length = len(t.match_repr)
@@ -118,7 +118,7 @@ class TokenError(ConfigError):
 
         # Determine how far along the first token is in the line:
         line_start = len(line) - len(line.lstrip())
-        if between[-1].kind is TokType.NEWLINE:
+        if between[-1].type is TokType.NEWLINE:
             line_end = len(line) - len(line.rstrip())
             line_start += line_end
         tok_start_distance = first_tok.colno - line_start - 1
