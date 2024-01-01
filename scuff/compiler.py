@@ -8,10 +8,13 @@ from ast import (
     Module,
     Name,
     NodeVisitor,
+    UnaryOp,
 )
 from collections.abc import Mapping, Sequence
 from types import GeneratorType
 from typing import Any, Literal
+
+from .error import CompileError
 
 
 type PythonData = str
@@ -214,5 +217,21 @@ class Compiler(NodeVisitor):
 
     def visit_Name(self, node: Name) -> str:
         return node.id
+
+    def visit_UnaryOp(self, node: UnaryOp) -> AST:
+        op = node.op
+        operand = (yield node.operand)
+        try:
+            if op == '-':
+                return -operand
+            elif op == '+':
+                return abs(operand)
+            elif op == '!':
+                return (not operand)
+        except TypeError:
+            typ = type(operand).__qualname__
+            # typ = type(node.operand).__qualname__
+            msg = f"Bad operand type for unary {op!r}: {typ!r}"
+            raise CompileError.hl_error(node._token, msg)
 
 
