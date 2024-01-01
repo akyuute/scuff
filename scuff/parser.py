@@ -321,14 +321,17 @@ class RecursiveDescentParser:
     def _parse_factor(self):
         tok = self._match(MatchesUnaryOp)
         if tok:
+            self._expr_stack.append(UnaryOp)
             type_ = tok.type
-            return UnaryOp(
+            node = UnaryOp(
                 type_.value,
                 (yield self._parse_factor)
             )
             self._expr_stack.pop()
-
-        return (yield self._parse_primary)
+        else:
+            node = (yield self._parse_primary)
+        node._token = tok
+        return node
 
     def _parse_primary(self):
         tok = self.lookahead
