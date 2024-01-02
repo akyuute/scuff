@@ -16,7 +16,7 @@ from os import PathLike
 
 from .compiler import Compiler
 from .lexer import Lexer
-from .parser import RecursiveDescentParser, FileParser, PyParser
+from .parser import RecursiveDescentParser, FileParser, PyParser, Unparser
 
 
 type PythonData = str
