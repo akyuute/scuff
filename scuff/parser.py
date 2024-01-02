@@ -662,6 +662,9 @@ class Unparser(NodeVisitor):
         string = node.id
         return string
 
+    def visit_UnaryOp(self, node: UnaryOp) -> str:
+        return node.op + (yield node.operand)
+
 
 class PyParser:
     '''
