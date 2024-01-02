@@ -132,7 +132,14 @@ class TokenError(ConfigError):
 
 class ParseError(TokenError):
     '''
-    Exception raised during string parsing operations.
+    Exception raised during parsing operations.
+    '''
+    pass
+
+
+class CompileError(TokenError):
+    '''
+    Exception raised during compiling operations.
     '''
     pass
 

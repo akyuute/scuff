@@ -1,5 +1,6 @@
 __all__ = (
     'ast_to_py',
+    'dump',
     'file_to_py',
     'parse',
     'py_to_scuff',
@@ -8,17 +9,45 @@ __all__ = (
 )
 
 
+import ast
 import os
 from ast import AST, Module
 from os import PathLike
 
 from .compiler import Compiler
 from .lexer import Lexer
-from .parser import RecursiveDescentParser, FileParser, PyParser
+from .parser import RecursiveDescentParser, FileParser, PyParser, Unparser
 
 
 type PythonData = str
 type ScuffText = str
+
+
+def dump(
+    node: AST,
+    annotate_fields: bool = True,
+    include_attributes: bool = False,
+    *,
+    indent: int | str | None = None
+) -> str:
+    '''
+    Return a formatted dump of the abstract syntax tree in `node`.
+    This is mainly useful for debugging purposes.
+    The parameters are fed directly into :func:`ast.parse`.
+
+    :param annotate_fields: Display unambiguous field names,
+        defaults to ``True``
+    :type annotate_fields: :class:`AST`
+
+    :param include_attributes: Display additional attributes such as line
+        numbers and column offsets, defaults to ``False``
+    :type include_attributes: :class:`bool`
+
+    :param indent: Pretty-print the tree with this indent level.
+        If ``None``, display as a single line, defaults to ``None``
+    :type indent: :class:`int` | :class:`str` | ``None``
+    '''
+    return ast.dump(node, annotate_fields, include_attributes, indent=indent)
 
 
 def parse(file: PathLike = None, *, string: ScuffText = None) -> Module:

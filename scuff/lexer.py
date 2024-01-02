@@ -78,9 +78,12 @@ class Lexer:
         (re.compile(r'^[^' + NEWLINE + r'\S]+'), TokType.SPACE),
 
         # Operators
-        (re.compile(r'^='), TokType.EQUAL),
+        (re.compile(r'^\='), TokType.EQUAL),
         (re.compile(r'^\.'), TokType.DOT),
-        (re.compile(r'^-'), TokType.MINUS),
+        (re.compile(r'^\-'), TokType.MINUS),
+        (re.compile(r'^\+'), TokType.PLUS),
+        (re.compile(r'^\!'), TokType.EXCLAMATION),
+        (re.compile(r'^\~'), TokType.TILDE),
 
         # Syntax
         (re.compile(r'^\,'), TokType.COMMA),

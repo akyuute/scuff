@@ -20,6 +20,7 @@ KEYWORDS = ()
 
 from .tools import (
     ast_to_py,
+    dump,
     file_to_py,
     parse,
     py_to_scuff,
