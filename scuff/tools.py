@@ -1,15 +1,18 @@
 __all__ = (
     'ast_to_py',
     'dump',
+    'file_to_json',
     'file_to_py',
     'parse',
     'py_to_scuff',
+    'scuff_to_json',
     'scuff_to_py',
     'unparse',
 )
 
 
 import ast
+import json
 import os
 from ast import AST, Module
 from os import PathLike
@@ -19,6 +22,7 @@ from .lexer import Lexer
 from .parser import RecursiveDescentParser, FileParser, PyParser, Unparser
 
 
+type JSONData = str
 type PythonData = str
 type ScuffText = str
 
@@ -94,6 +98,18 @@ def py_to_scuff(data: PythonData) -> ScuffText:
     :type data: :class:`PythonData`
     '''
     return PyParser.to_scuff(data)
+
+
+def scuff_to_json(string: ScuffText) -> JSONData:
+    '''
+    Convert Scuff to JSON data.
+
+    :param string: The text to parse
+    :type string: :class:`ScuffText`
+    '''
+    module = RecursiveDescentParser(string=string).parse()
+    data = Compiler().compile(module)
+    return json.dumps(data)
 
 
 def scuff_to_py(string: ScuffText) -> PythonData:
