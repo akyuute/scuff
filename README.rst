@@ -55,9 +55,9 @@ Data Types
 -----------
 
 - Numbers
-    Numbers can be positive integers or floats::
+    Numbers can be integers or floats::
 
-        1 1.2 1_000 0.123 .123_4
+        1 1.2 -1_000 0.123 .123_4
 
 - Booleans
     The boolean values ``True`` and ``False`` are given using these variants::
