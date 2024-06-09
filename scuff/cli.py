@@ -25,18 +25,20 @@ class ArgParser(ArgumentParser):
 
         self.add_argument(
             'source',
-            help="The file path or literal Scuff to process.",
+            action='extend',
+            nargs='+',
+            help="The file path(s) or literal Scuff to process.",
         )
 
         self.add_argument(
-            '--to-json', '-j',
+            '-j', '--to-json',
             dest='json',
             action='store_true',
             help="Convert `source` to JSON.",
         )
 
         self.add_argument(
-            '--show-ast', '-a',
+            '-a', '--show-ast',
             dest='ast',
             action='store_true',
             help="Parse `source` and show its equivalent AST.",
@@ -49,8 +51,19 @@ class ArgParser(ArgumentParser):
         )
 
         self.add_argument(
-            '--version', '-v',
+            '-v', '--version',
             action='version',
             version=f"{__package__} {__version__}",
         )
+
+    def parse_args(
+        self,
+        args: list[str] = None,
+    ) -> dict[str]:
+        '''
+        Override :meth:`ArgumentParser.parse_args` and return command
+        line options as a dict.
+        '''
+        opts = vars(super().parse_args(args))
+        return opts
 
