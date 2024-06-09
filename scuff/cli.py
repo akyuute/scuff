@@ -38,6 +38,13 @@ class ArgParser(ArgumentParser):
         )
 
         self.add_argument(
+            '-p', '--to-python',
+            dest='py',
+            action='store_true',
+            help="Convert `source` to Python.",
+        )
+
+        self.add_argument(
             '-a', '--show-ast',
             dest='ast',
             action='store_true',
