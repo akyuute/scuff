@@ -3,6 +3,7 @@ __all__ = (
     'to_py',
     'parse',
     'unparse',
+    'py_to_scuff',
     'dump',
 )
 
