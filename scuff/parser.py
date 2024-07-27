@@ -23,7 +23,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from types import GeneratorType
 from typing import Any, NoReturn
 
-from .error import ParseError
+from .error import NotAMappingError, ParseError
 from .compiler import Compiler
 from .lexer import Lexer
 from .token import(
@@ -608,53 +608,47 @@ class Unparser(NodeVisitor):
         return str(val)
 
     def visit_Dict(self, node: Dict) -> str:
+        one_line_limit = 1
+        opening, closing = "{}"
+        joiner = ", "
+        multiline = len(node.keys) > one_line_limit
+        if multiline:
+            self._indent_level += 1
+            opening = f"{opening}\n{self.indent()}"
+            joiner = f"\n{self.indent()}"
         keys = []
         values = []
         for k in node.keys:
             keys.append((yield k))
         for v in node.values:
-            self._indent_level += 1
             value = (yield v)
             if value == str(None):
                 value = ""
             values.append(value)
-            self._indent_level -= 1
         assignments = tuple(' '.join(pair) for pair in zip(keys, values))
-        self._indent_level += 1
-        if len(assignments) > 1:
-            opening = f"{{\n{self.indent()}"
-            joiner = f"\n{self.indent()}" 
+        if multiline:
             self._indent_level -= 1
-            closing = f"\n{self.indent()}}}"
-        else:
-            opening = "{"
-            joiner = ""
-            closing = "}"
+            closing = f"\n{self.indent()}{closing}"
         joined = joiner.join(assignments)
         string = f"{opening}{joined}{closing}"
-        self._indent_level -= 1
         return string
 
     def visit_List(self, node: List) -> str:
         one_line_limit = 3
+        opening, closing = "[]"
+        joiner = ", "
+        multiline = len(node.elts) > one_line_limit
+        if multiline:
+            self._indent_level += 1
+            opening = f"{opening}\n{self.indent()}"
+            joiner = '\n' + self.indent()
         elems = []
         for e in node.elts:
-            self._indent_level += 1
             elems.append((yield e))
-            self._indent_level -= 1
-        self._indent_level += 1
-        if len(elems) > one_line_limit:
-            self._indent_level += 1
-            opening = f"[\n{self.indent()}"
-            joiner = '\n' + self.indent()
-            self._indent_level -= 1
-            closing = f"\n{self.indent()}]"
-        else:
-            opening = "["
-            joiner = ", "
-            closing = "]"
-        self._indent_level -= 1
         joined = joiner.join(elems)
+        if multiline:
+            self._indent_level -= 1
+            closing = f"\n{self.indent()}{closing}"
         string = f"{opening}{joined}{closing}"
         return string
 
@@ -669,7 +663,7 @@ class Unparser(NodeVisitor):
 class PyParser:
     '''
     Convert Python data to ASTs.
-    Effectively do the job of `ast.unparse()`.
+    Effectively do the job of `ast.parse()`.
     '''
 
     DO_NOT_USE_QUOTES = {}
@@ -688,6 +682,11 @@ class PyParser:
         :type data: :class:`Mapping`
         '''
         assignments = []
+        if not isinstance(data, Mapping):
+            raise NotAMappingError(
+                f"The outermost data structure must be a mapping."
+            )
+
         for key, val in data.items():
             if key in cls.DO_NOT_USE_QUOTES:
                 if isinstance(val, str):

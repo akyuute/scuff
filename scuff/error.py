@@ -143,4 +143,9 @@ class CompileError(TokenError):
     '''
     pass
 
+class NotAMappingError(ValueError):
+    '''
+    Exception raised when the root data structure of the text or Python
+    code being being parsed is not a mapping.
+    '''
 
