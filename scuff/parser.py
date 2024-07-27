@@ -856,7 +856,12 @@ class PyParser:
             values = [self._parse_node(v) for v in node]
             return List(values)
 
-        elif isinstance(node, (int, float, str)):
+        elif isinstance(node, (int, float)):
+            return Constant(node)
+
+        elif isinstance(node, str):
+            if node in self.unquoted:
+                return Name(node)
             return Constant(node)
 
         elif node in (None, True, False):
