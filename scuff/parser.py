@@ -832,12 +832,11 @@ class PyParser:
         if isinstance(node, Mapping):
             keys = []
             vals = []
+            attribute = False
             for key, val in node.items():
                 if isinstance(val, Mapping):
                     if len(node) == 1:
                         attribute = True
-                    else:
-                        attribute = False
 
                     # An attribute, possibly nested, or an assignment.
                     attrs, assigns = cls._run_process_nested_dict(val, [key])
