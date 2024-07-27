@@ -664,16 +664,16 @@ class PyParser:
     '''
     Convert Python data to ASTs.
     Effectively do the job of `ast.parse()`.
+
+    :param unquoted: Values found at keys in this set and any elements
+        within will be represented as symbols (without quotes).
+    :type unquoted: :class:`Iterable`
     '''
 
-    DO_NOT_USE_QUOTES = {}
-    '''
-    Values found at keys in this set and any elements within will be
-    represented as symbols (without quotes).
-    '''
+    def __init__(self, unquoted: Iterable = {}) -> None:
+        self.unquoted = unquoted
 
-    @classmethod
-    def parse(cls, data: Mapping) -> Module:
+    def parse(self, data: Mapping) -> Module:
         '''
         Convert a Python mapping to a Module AST.
         Effectively do the job of `ast.unparse()`.
@@ -688,19 +688,18 @@ class PyParser:
             )
 
         for key, val in data.items():
-            if key in cls.DO_NOT_USE_QUOTES:
+            if key in self.unquoted:
                 if isinstance(val, str):
                     val = Name(field)
                 elif isinstance(val, Sequence):
                     val = List([Name(field) for field in val])
             else:
-                val = cls._parse_node(val)
+                val = self._parse_node(val)
             a = Assign([Name(key)], val)
             assignments.append(a)
         return Module(assignments)
 
-    @classmethod
-    def to_scuff(cls, data: Mapping) -> FileContents:
+    def to_scuff(self, data: Mapping) -> FileContents:
         '''
         Convert a Python mapping to an AST and return the Scuff text that
         could be parsed back into that AST.
@@ -708,13 +707,12 @@ class PyParser:
         :param data: The mapping to convert
         :type data: :class:`Mapping`
         '''
-        tree = cls.parse(data)
+        tree = self.parse(data)
         text = Unparser().unparse(tree)
         return text
 
-    @classmethod
     def _run_process_nested_dict(
-        cls,
+        self,
         dct: dict | Any,
         roots: Sequence[str] = [],
         descended: int = 0
@@ -734,12 +732,12 @@ class PyParser:
         :param descended: How far `dct` is from the outermost key
         :type descended: :class:`int`, defaults to ``0``
         '''
-        stack = [cls._process_nested_dict(dct, roots, descended)]
+        stack = [self._process_nested_dict(dct, roots, descended)]
         result = None
         while stack:
             try:
                 args = stack[-1].send(result)
-                stack.append(cls._process_nested_dict(*args))
+                stack.append(self._process_nested_dict(*args))
                 result = None
             except StopIteration as e:
                 stack.pop()
@@ -820,8 +818,7 @@ class PyParser:
             nodes.append(node)
         return nodes
 
-    @classmethod
-    def _parse_node(cls, node: Any) -> AST:
+    def _parse_node(self, node: Any) -> AST:
         '''
         Parse a Python object and return its corresponding AST node.
 
@@ -838,8 +835,8 @@ class PyParser:
                         attribute = True
 
                     # An attribute, possibly nested, or an assignment.
-                    attrs, assigns = cls._run_process_nested_dict(val, [key])
-                    nodes = cls._process_nested_attrs(attrs)
+                    attrs, assigns = self._run_process_nested_dict(val, [key])
+                    nodes = self._process_nested_attrs(attrs)
                     keys.extend(nodes)
                     vals.extend(assigns)
 
@@ -847,16 +844,16 @@ class PyParser:
                     # An explicit assignment.
                     attribute = False
                     keys.append(Name(key))
-                    v = cls._parse_node(val)
+                    v = self._parse_node(val)
                     vals.append(v)
 
             if attribute:
                 if len(vals) == 1:
-                    return Assign(keys, cls._parse_node(*vals))
-            return Dict(keys, [cls._parse_node(v) for v in vals])
+                    return Assign(keys, self._parse_node(*vals))
+            return Dict(keys, [self._parse_node(v) for v in vals])
 
         elif isinstance(node, list):
-            values = [cls._parse_node(v) for v in node]
+            values = [self._parse_node(v) for v in node]
             return List(values)
 
         elif isinstance(node, (int, float, str)):

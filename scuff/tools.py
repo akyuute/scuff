@@ -106,7 +106,7 @@ def py_to_scuff(data: PythonData) -> ScuffText:
     :param data: The Python object to convert
     :type data: :class:`PythonData`
     '''
-    return PyParser.to_scuff(data)
+    return PyParser().to_scuff(data)
 
 
 def to_py(source: PathLike | ScuffText) -> PythonData:
